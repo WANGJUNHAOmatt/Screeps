@@ -14,6 +14,20 @@ var roleGlobalPorter = {
                 '5edf82474d2ceba4e20dd55a', //  Storage
             ],
         },
+        '2' : {
+            pos : new RoomPosition(40, 25, 'W15S18'),
+            id : '5bbcac0f9099fc012e634d0b',
+            'out': [
+                '5edf82474d2ceba4e20dd55a', //  Storage
+            ],
+        },
+        '3' : {
+            pos : new RoomPosition(44, 25, 'W15S18'),
+            id : '5bbcac0f9099fc012e634d0a',
+            'out': [
+                '5edf82474d2ceba4e20dd55a', //  Storage
+            ],
+        },
     },
     /** @param {Creep} creep **/
     run: function (creep) {
@@ -86,9 +100,8 @@ var roleGlobalPorter = {
             else{
                 var resource = creep.room.find(FIND_DROPPED_RESOURCES);
                 if(resource.length){
-                    
                     for(i in resource){
-                        //  找到资源
+                        //  找到资源                      
                         if(resource[i].pos.isEqualTo(this.targets[id].pos)){
                             //  捡拾资源
                             if(creep.pickup(resource[i]) == ERR_NOT_IN_RANGE){
@@ -101,7 +114,7 @@ var roleGlobalPorter = {
                 }
                 else{
                     creep.say("No resource");
-                    console.error(creep.name, "can't find resource!");
+                    console.log(creep.name, "can't find resource!");
                 }
             }
         }

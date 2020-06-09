@@ -7,7 +7,15 @@ var roleGolbalHarvester = {
         '1' : {
             pos : new RoomPosition(44, 21, 'W15S19'),
             id : '5bbcac0f9099fc012e634d10',
-        }
+        },
+        '2' : {
+            pos : new RoomPosition(39, 26, 'W15S18'),
+            id : '5bbcac0f9099fc012e634d0b',
+        },
+        '3' : {
+            pos : new RoomPosition(45, 24, 'W15S18'),
+            id : '5bbcac0f9099fc012e634d0a',
+        },
     },
     /** @param {Creep} creep **/
     run : function (creep) {

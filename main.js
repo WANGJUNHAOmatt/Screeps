@@ -69,8 +69,13 @@ var creeps_roles = {
     //  待重构代码的upgrader
     "upgrader" : {
         "number": 1,
-        "body" : [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE],
-        "cost" : 550,
+        "body" : [
+            WORK, WORK, WORK, WORK, WORK, 
+            WORK, 
+            CARRY, CARRY, 
+            MOVE, MOVE, MOVE
+        ],
+        "cost" : 850,
     }, 
     //  待重构代码的builder
     "builder" : {
@@ -103,7 +108,7 @@ module.exports.loop = function () {
     if(testflag){
         testflag = false;
         
-        build('globalPorter', 'GlobalPorter01');
+        build('globalPorter', 'GlobalPorter03');
     }
 
     // // 防御塔
