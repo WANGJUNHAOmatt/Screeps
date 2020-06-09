@@ -17,4 +17,12 @@ module.exports.stateScanner = function () {
     Memory.stats.cpu = Game.cpu.getUsed()
     // bucket 当前剩余量
     Memory.stats.bucket = Game.cpu.bucket
+
+    //  自己添加的
+    //  储存的能量
+    Memory.stats.energy = Game.rooms['W16S19'].storage.store[RESOURCE_ENERGY];
+    //  rcl等级和进度
+    Memory.stats.rclLevel = Game.rooms['W16S19'].controller.level;
+    Memory.stats.rclProgress = Game.rooms['W16S19'].controller.progress;
+    Memory.stats.rclProgressTotal = Game.rooms['W16S19'].controller.progressTotal;
 }

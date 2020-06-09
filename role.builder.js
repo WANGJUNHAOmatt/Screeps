@@ -1,5 +1,3 @@
-var roleUpgrader = require('role.upgrader');
-
 var roleBuilder = {
 
     /** @param {Creep} creep **/
@@ -39,9 +37,29 @@ var roleBuilder = {
                 }
             });
             //  维护
-            if(targets.length > 0 && (id == '0' || id == '1')) {
-                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+            if(targets.length > 0 && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') ) {
+                //  优先考虑非防御塔
+                var charge_tower = true;
+                for(target in targets){
+                    if(targets[target].structureType != STRUCTURE_TOWER){
+                        if(Memory.debugMode){
+                            console.log(creep.name, '给非防御塔充电');
+                        }
+                        if(creep.transfer(targets[target], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(targets[target], {visualizePathStyle: {stroke: '#ffffff'}});
+                        }
+                        charge_tower = false;
+                        break;
+                    }
+                }
+                //  如果其他的都满了则补充塔
+                if(Memory.debugMode){
+                    console.log(creep.name, '给防御塔充电');
+                }
+                if(charge_tower){
+                    if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+                    }
                 }
             }
             else{

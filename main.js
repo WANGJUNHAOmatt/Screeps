@@ -1,7 +1,10 @@
 var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
-var rolePorter = require('role.Porter');
+var rolePorter = require('role.porter');
+var roleExplorer = require('role.explorer');
+var roleGlobalHarvester = require('role.globalHarvester');
+var roleGlobalPorter = require('role.globalPorter');
 var stateScanner = require('stateScanner').stateScanner;
 
 Memory.debugMode = false;
@@ -21,35 +24,63 @@ var creeps_roles = {
         "body" : [WORK, WORK, WORK, WORK, WORK, MOVE],
         "cost" : 550,
     }, 
+    //  (2020/06/10新增)    外矿采集者
+    "globalHarvester" : {
+        "number" : 2,
+        "body" : [
+            WORK, WORK, WORK, 
+            MOVE, MOVE, MOVE,
+        ],
+        "cost": 450,
+    },
+
     //  搬运能源，CARRY，MOVE为主
     "porter" : {
-        "number": 4,
+        "number": 1,
         "body" : [
                     CARRY, CARRY, CARRY, CARRY, CARRY, 
                     CARRY, CARRY, CARRY,
-                    MOVE, MOVE, MOVE, MOVE
+                    MOVE, MOVE, MOVE, MOVE, MOVE,
+                    MOVE, MOVE, MOVE,
                 ],
-        "cost" : 600,
+        "cost" : 800,
     },
-    //  建筑/维修，WORK，CARRY，MOVE
-    "Builder" : {
-        "number": 3,
-        "body" : [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE],
-        "cost" : 550,
+
+    //  (2020/06/10新增)    外矿搬运工
+    "globalPorter" : {
+        "number" : 1,
+        "body" : [
+            CARRY, CARRY, CARRY, CARRY, CARRY, 
+            CARRY, CARRY, CARRY, CARRY, CARRY,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+        ],
+        "cost" : 1000,
+    },
+
+    //  探索家
+    "explorer" : {
+        "number": 1,
+        "body" : [CLAIM, MOVE, MOVE],
+        "cost" : 700,
     }, 
 
     // TODO: 重构这段职业 -> 任务发布式
     //  待重构代码的upgrader
     "upgrader" : {
-        "number": 2,
+        "number": 1,
         "body" : [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE],
         "cost" : 550,
     }, 
     //  待重构代码的builder
     "builder" : {
-        "number": 3,
-        "body" : [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE],
-        "cost" : 550,
+        "number": 2,
+        "body" : [
+            WORK, WORK, WORK, WORK, 
+            CARRY, CARRY, 
+            MOVE, MOVE, MOVE
+        ],
+        "cost" : 650,
     }, 
 }
 
@@ -72,8 +103,7 @@ module.exports.loop = function () {
     if(testflag){
         testflag = false;
         
-
-        build('porter', 'Upgrader00');
+        build('globalPorter', 'GlobalPorter01');
     }
 
     // // 防御塔
@@ -100,7 +130,16 @@ module.exports.loop = function () {
         // console.log("Doing respawn test:", name);
         if(!Game.creeps[name]){
             console.log(name, " is died.");
-            build(Memory.creeps[name].role, name);
+            //  将想要删除的creep，等待老死并删除Memory
+            var killCreepName = "";
+            if(name != killCreepName)
+            {
+                build(Memory.creeps[name].role, name);
+            }
+            else{
+                console.log(killCreepName, "is died, deleting memory.");
+                delete Memory.creeps[killCreepName];
+            }
             break;
         }
     }
@@ -108,17 +147,7 @@ module.exports.loop = function () {
 
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
-        //  死亡上报复生机制
-        // if(Game.creeps[name].ticksToLive <= 1000){
-        //     if(Game.creeps[name]){
-        //         // Game.creeps[name].say("I am dying.");
-        //         // // spawning_list.push([name, Game.creeps.name.])
-        //         // console.log("creep is dying.");
-        //     }
-        // }
-        if(!Game.creeps[name]){
-            console.log(name + 'is died.');
-        }
+
         if(creep.memory.role == 'harvester') {
             roleHarvester.run(creep);
         }
@@ -131,8 +160,17 @@ module.exports.loop = function () {
         if(creep.memory.role == 'porter') {
             rolePorter.run(creep);
         }   
+        if(creep.memory.role == 'explorer'){
+            roleExplorer.run(creep);
+        }
+        if(creep.memory.role == 'globalHarvester'){
+            roleGlobalHarvester.run(creep);
+        }
+        if(creep.memory.role == 'globalPorter'){
+            roleGlobalPorter.run(creep);
+        }
     }
-
+    //  数据收集
     stateScanner();
 }
 

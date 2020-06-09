@@ -77,8 +77,8 @@ var rolePorter = {
                     console.log(creep.name, "can't find output target!", this.targets[id]['out'][target]);
                 }
                 else{
-                    //  考虑已经满了的情况
-                    if(Game.getObjectById(this.targets[id]['out'][target]).store.getFreeCapacity(RESOURCE_ENERGY) == 0){
+                    //  考虑已经空闲空间不足1下的情况
+                    if(Game.getObjectById(this.targets[id]['out'][target]).store.getFreeCapacity(RESOURCE_ENERGY) < 400){
                         continue;
                     }
                     //  更新最少的那个目标容器
@@ -111,7 +111,18 @@ var rolePorter = {
          *          （通过预定来解决？类似任务系统）
          */
         else {
-            var final_target = null, maximal_energy = 0;
+            var tombstone = creep.room.find(FIND_TOMBSTONES, {
+                filter: (tombstone) => {
+                    return tombstone.store[RESOURCE_ENERGY];
+                }
+            })
+            if(tombstone.length){
+                console.log(creep.name, "find tombstone.");
+                if(creep.pickup(tombstone[0]) == ERR_NOT_IN_RANGE){
+                    creep.say("挖坟去！");
+                    creep.moveTo(tombstone[0]);
+                }
+            }
             //  特判 -> 捡拾resource
             if(this.resource.length){
                 if(creep.pickup(Game.getObjectById('5edf5ea15b130af755023ed3'), ) == ERR_NOT_IN_RANGE){
@@ -120,6 +131,7 @@ var rolePorter = {
                 }
             }
             else{
+                var final_target = null, maximal_energy = 0;
                 //  捡拾 container
                 if(Memory.debugMode){
                     console.log(creep.name, "is inputing.");
@@ -135,6 +147,11 @@ var rolePorter = {
                             final_target = this.targets[id]['in'][target];
                         }
                     }
+                }
+                if(Game.getObjectById(final_target).store[RESOURCE_ENERGY] < creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.room.storage.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)){
+                    final_target = creep.room.storage.id;
+                    creep.say("取钱！");
+                    console.log(creep.name, '输入资源不足');
                 }
                 if(creep.withdraw(Game.getObjectById(final_target), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
                     creep.say("input⚡");
