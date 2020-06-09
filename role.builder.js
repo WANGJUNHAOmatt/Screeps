@@ -30,7 +30,12 @@ var roleBuilder = {
                     return (structure.structureType == STRUCTURE_EXTENSION ||
                         structure.structureType == STRUCTURE_SPAWN ||
                         structure.structureType == STRUCTURE_TOWER) &&
-                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+                        (structure.store.getCapacity < creep.store[RESOURCE_ENERGY] || structure.store.getFreeCapacity > [RESOURCE_ENERGY]);
+                        /** 新增过滤：
+                         *      空间本身就小于creep的容量的 || 
+                         *      剩余空间大于creep当前的容量的
+                        */
                 }
             });
             //  维护
@@ -64,8 +69,22 @@ var roleBuilder = {
             }
         }
         else {
-            if(creep.withdraw(Game.getObjectById('5ede9186424225bfa8e29658'), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(Game.getObjectById('5ede9186424225bfa8e29658'), {visualizePathStyle: {stroke: '#ffaa00'}});
+            var target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return ((structure.structureType == STRUCTURE_CONTAINER  ||
+                        structure.structureType == STRUCTURE_STORAGE) &&
+                        structure.store[RESOURCE_ENERGY] > creep.store.getFreeCapacity(RESOURCE_ENERGY))
+                }
+            });
+            if(target){
+                // console.log(creep.name, " find ", target);                
+                if(creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
+                }
+            }
+            else{
+                creep.say("No enough energy!");
+                // console.log(creep.store.getFreeCapacity(RESOURCE_ENERGY));
             }
         }
     }

@@ -2,6 +2,9 @@ var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
 var rolePorter = require('role.Porter');
+var stateScanner = require('stateScanner').stateScanner;
+
+Memory.debugMode = false;
 
 // creep的角色
 /*
@@ -21,10 +24,12 @@ var creeps_roles = {
     //  搬运能源，CARRY，MOVE为主
     "porter" : {
         "number": 4,
-        "body" : [CARRY, CARRY, CARRY, CARRY, CARRY, 
-                    CARRY, CARRY, MOVE, MOVE, MOVE,
-                    MOVE],
-        "cost" : 550,
+        "body" : [
+                    CARRY, CARRY, CARRY, CARRY, CARRY, 
+                    CARRY, CARRY, CARRY,
+                    MOVE, MOVE, MOVE, MOVE
+                ],
+        "cost" : 600,
     },
     //  建筑/维修，WORK，CARRY，MOVE
     "Builder" : {
@@ -68,24 +73,27 @@ module.exports.loop = function () {
         testflag = false;
         
 
-        build('upgrader', 'Upgrader00');
+        build('porter', 'Upgrader00');
     }
 
     // // 防御塔
-    // var tower = Game.getObjectById('5ede9c54a19325e26f4e70f3');
-    // if(tower) {
-    //     var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-    //     if(closestHostile) {
-    //         tower.attack(closestHostile);
-    //     }
+    var tower = Game.getObjectById('5edebfd94e312941cfb6f2fe');
+    if(tower) {
+        var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+        if(closestHostile) {
+            tower.attack(closestHostile);
+        }
 
-    //     var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-    //         filter: (structure) => structure.hits < structure.hitsMax
-    //     });
-    //     if(closestDamagedStructure) {
-    //         tower.repair(closestDamagedStructure);
-    //     }
-    // }
+        var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: (structure) => {
+                return (structure.hits + 200 < structure.hitsMax && 
+                        structure.structureType != STRUCTURE_WALL)
+            }
+        });
+        if(closestDamagedStructure) {
+            tower.repair(closestDamagedStructure);
+        }
+    }
     
     //  简单的死亡控制
     for(name in Memory.creeps){
@@ -97,22 +105,6 @@ module.exports.loop = function () {
         }
     }
     
-    
-
-    // var tower = Game.getObjectById('TOWER_ID');
-    // if(tower) {
-    //     var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-    //         filter: (structure) => structure.hits < structure.hitsMax
-    //     });
-    //     if(closestDamagedStructure) {
-    //         tower.repair(closestDamagedStructure);
-    //     }
-
-    //     var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-    //     if(closestHostile) {
-    //         tower.attack(closestHostile);
-    //     }
-    // }
 
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
@@ -140,4 +132,11 @@ module.exports.loop = function () {
             rolePorter.run(creep);
         }   
     }
+
+    stateScanner();
 }
+
+/**
+ * 全局统计信息扫描器
+ * 负责搜集关于 cpu、memory、GCL、GPL 的相关信息
+ */
