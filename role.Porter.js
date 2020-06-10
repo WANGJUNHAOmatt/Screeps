@@ -10,6 +10,7 @@ var rolePorter = {
             'in': [
                 '5edf60335c8fede4ed0b08e6', //  矿[0] 
                 '5edf550ebcf2e480efa2776d', //  矿[1]
+                '5edfff8c66081f4dcc883f93', //  GlobalPorter 暂存地
             ],
             //  输出
             'out': [
@@ -97,7 +98,7 @@ var rolePorter = {
                 if(Memory.debugMode){
                     console.log(creep.name, "go to", Game.getObjectById(final_target));
                 }
-                creep.moveTo(Game.getObjectById(final_target));
+                creep.moveTo(Game.getObjectById(final_target), {visualizePathStyle: {stroke: '#ffffff'}});
             }
         }
         /**
@@ -120,14 +121,14 @@ var rolePorter = {
                 console.log(creep.name, "find tombstone.");
                 if(creep.pickup(tombstone[0]) == ERR_NOT_IN_RANGE){
                     creep.say("挖坟去！");
-                    creep.moveTo(tombstone[0]);
+                    creep.moveTo(tombstone[0], {visualizePathStyle: {stroke: '#ffffff'}});
                 }
             }
             //  特判 -> 捡拾resource
             if(this.resource.length){
                 if(creep.pickup(Game.getObjectById('5edf5ea15b130af755023ed3'), ) == ERR_NOT_IN_RANGE){
                     creep.say("resource⚡");
-                    creep.moveTo(Game.getObjectById('5edf5ea15b130af755023ed3'));
+                    creep.moveTo(Game.getObjectById('5edf5ea15b130af755023ed3'), {visualizePathStyle: {stroke: '#ffffff'}});
                 }
             }
             else{
@@ -155,7 +156,7 @@ var rolePorter = {
                 }
                 if(creep.withdraw(Game.getObjectById(final_target), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
                     creep.say("input⚡");
-                    creep.moveTo(Game.getObjectById(final_target));
+                    creep.moveTo(Game.getObjectById(final_target), {visualizePathStyle: {stroke: '#ffffff'},reusePath: 50});
                 }
             }
             

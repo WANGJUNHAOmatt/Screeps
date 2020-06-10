@@ -23,7 +23,13 @@ var roleBuilder = {
         }
 
         if(creep.memory.building) {
-            var targets = creep.room.find(FIND_STRUCTURES, {
+            /**
+             * 维护（补充能量） | 按照id进行分工
+             * 当builder00，和builder01都在场时 -> builder00 负责
+             * 当builder01 或 builder00 死亡时，另一个人负责
+             * (?)当两个工人都死亡时 -> 没人管了就...
+             */
+            var target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
                 filter: (structure) => {
                     return (structure.structureType == STRUCTURE_EXTENSION ||
                         structure.structureType == STRUCTURE_SPAWN ||
@@ -36,29 +42,39 @@ var roleBuilder = {
                         */
                 }
             });
-            //  维护
-            if(targets.length > 0 && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') ) {
+            if(target && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') ) {
                 //  优先考虑非防御塔
-                var charge_tower = true;
-                for(target in targets){
-                    if(targets[target].structureType != STRUCTURE_TOWER){
-                        if(Memory.debugMode){
-                            console.log(creep.name, '给非防御塔充电');
-                        }
-                        if(creep.transfer(targets[target], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                            creep.moveTo(targets[target], {visualizePathStyle: {stroke: '#ffffff'}});
-                        }
-                        charge_tower = false;
-                        break;
+                
+                //  新增最近非防御塔目标
+                var closestTarget = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return (   structure.structureType == STRUCTURE_EXTENSION ||
+                            structure.structureType == STRUCTURE_SPAWN) &&
+                            structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+                            (structure.store.getCapacity < creep.store[RESOURCE_ENERGY] || structure.store.getFreeCapacity > [RESOURCE_ENERGY]);
+                            /** 新增过滤：
+                             *      空间本身就小于creep的容量的 || 
+                             *      剩余空间大于creep当前的容量的
+                            */
+                    }
+                });
+                
+                //  找到最近的非防御塔目标
+                if(closestTarget){
+                    if(Memory.debugMode){
+                        console.log(creep.name, "find target", closestTarget);
+                    }
+                    if(creep.transfer(closestTarget, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(closestTarget, {visualizePathStyle: {stroke: '#ffffff'}});
                     }
                 }
                 //  如果其他的都满了则补充塔
-                if(Memory.debugMode){
-                    console.log(creep.name, '给防御塔充电');
-                }
-                if(charge_tower){
-                    if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+                else{
+                    if(Memory.debugMode){
+                        console.log(creep.name, '给防御塔充电');
+                    }
+                    if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
                     }
                 }
             }

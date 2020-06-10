@@ -5,6 +5,7 @@ var roleGlobalPorter = {
             id : '5bbcac0f9099fc012e634d0e',
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
+                '5edfff8c66081f4dcc883f93', //  接引容器
             ],
         },
         '1' : {
@@ -12,6 +13,7 @@ var roleGlobalPorter = {
             id : '5bbcac0f9099fc012e634d10',
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
+                '5edfff8c66081f4dcc883f93', //  接引容器
             ],
         },
         '2' : {
@@ -19,6 +21,7 @@ var roleGlobalPorter = {
             id : '5bbcac0f9099fc012e634d0b',
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
+                '5edfff8c66081f4dcc883f93', //  接引容器
             ],
         },
         '3' : {
@@ -26,6 +29,7 @@ var roleGlobalPorter = {
             id : '5bbcac0f9099fc012e634d0a',
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
+                '5edfff8c66081f4dcc883f93', //  接引容器
             ],
         },
     },
@@ -100,13 +104,22 @@ var roleGlobalPorter = {
             else{
                 var resource = creep.room.find(FIND_DROPPED_RESOURCES);
                 if(resource.length){
+                    if(Memory.debugMode){
+                        console.log("找到资源", resource.length);
+                    }
                     for(i in resource){
                         //  找到资源                      
                         if(resource[i].pos.isEqualTo(this.targets[id].pos)){
+                            if(Memory.debugMode){
+                                console.log("找到正确资源", resource[i]);
+                            }
                             //  捡拾资源
                             if(creep.pickup(resource[i]) == ERR_NOT_IN_RANGE){
-                                creep.say("MOVE!!!");
-                                creep.moveTo(this.targets[id].pos, {visualizePathStyle: {stroke: '#ffffff'},reusePath: 50});
+                                if(Memory.debugMode){
+                                    console.log("前往正确资源", resource[i]);
+                                }
+                                creep.say("前往收集!!!");
+                                creep.moveTo(resource[i].pos, {visualizePathStyle: {stroke: '#ffffff'},reusePath: 50});
                             }
                             break;
                         }
