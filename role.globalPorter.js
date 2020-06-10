@@ -6,6 +6,7 @@ var roleGlobalPorter = {
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
                 '5edfff8c66081f4dcc883f93', //  接引容器
+                '5ede7d734039d213a6af584a', //  Upgrader容器
             ],
         },
         '1' : {
@@ -14,6 +15,7 @@ var roleGlobalPorter = {
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
                 '5edfff8c66081f4dcc883f93', //  接引容器
+                '5ede7d734039d213a6af584a', //  Upgrader容器
             ],
         },
         '2' : {
@@ -22,6 +24,7 @@ var roleGlobalPorter = {
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
                 '5edfff8c66081f4dcc883f93', //  接引容器
+                '5ede7d734039d213a6af584a', //  Upgrader容器
             ],
         },
         '3' : {
@@ -30,6 +33,23 @@ var roleGlobalPorter = {
             'out': [
                 '5edf82474d2ceba4e20dd55a', //  Storage
                 '5edfff8c66081f4dcc883f93', //  接引容器
+                '5ede7d734039d213a6af584a', //  Upgrader容器
+            ],
+        },
+        '4' : {
+            pos : new RoomPosition(38, 2, 'W17S21'),
+            id : '5bbcabf49099fc012e6348e0',
+            'out': [
+                '5edf82474d2ceba4e20dd55a', //  Storage
+                '5ede7d734039d213a6af584a', //  Upgrader容器
+            ],
+        },
+        '5' : {
+            pos : new RoomPosition(44, 37, 'W17S21'),
+            id : '5bbcabf49099fc012e6348e2',
+            'out': [
+                '5edf82474d2ceba4e20dd55a', //  Storage
+                '5ede7d734039d213a6af584a', //  Upgrader容器
             ],
         },
     },
@@ -72,7 +92,7 @@ var roleGlobalPorter = {
                 }
                 else{
                     //  考虑已经空闲空间不足1下的情况
-                    if(Game.getObjectById(this.targets[id]['out'][target]).store.getFreeCapacity(RESOURCE_ENERGY) < 400){
+                    if(Game.getObjectById(this.targets[id]['out'][target]).store.getFreeCapacity(RESOURCE_ENERGY) < creep.store[RESOURCE_ENERGY]){
                         continue;
                     }
                     //  更新最少的那个目标容器
@@ -102,6 +122,21 @@ var roleGlobalPorter = {
             } 
             //  在同一个房间
             else{
+                var tombstone = creep.room.find(FIND_TOMBSTONES, {
+                    filter: (tombstone) => {
+                        return tombstone.store[RESOURCE_ENERGY];
+                    }
+                })
+                if(tombstone.length){
+                    console.log(creep.name, "find tombstone.", tombstone[0]);
+                    if(creep.withdraw(tombstone[0]) == ERR_NOT_IN_RANGE){
+                        creep.say("挖坟去！");
+                        // console.log(creep.name, "find tombstone.", tombstone[0]);
+                        creep.moveTo(tombstone[0], {visualizePathStyle: {stroke: '#ffffff'}});
+                    }
+                    return;
+                }
+
                 var resource = creep.room.find(FIND_DROPPED_RESOURCES);
                 if(resource.length){
                     if(Memory.debugMode){

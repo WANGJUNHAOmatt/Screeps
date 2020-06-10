@@ -29,77 +29,54 @@ var roleBuilder = {
              * 当builder01 或 builder00 死亡时，另一个人负责
              * (?)当两个工人都死亡时 -> 没人管了就...
              */
-            var target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-                filter: (structure) => {
-                    return (structure.structureType == STRUCTURE_EXTENSION ||
-                        structure.structureType == STRUCTURE_SPAWN ||
-                        structure.structureType == STRUCTURE_TOWER) &&
-                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-                        (structure.store.getCapacity < creep.store[RESOURCE_ENERGY] || structure.store.getFreeCapacity > [RESOURCE_ENERGY]);
-                        /** 新增过滤：
-                         *      空间本身就小于creep的容量的 || 
-                         *      剩余空间大于creep当前的容量的
-                        */
+
+            //  新增最近需要补充能量的目标
+            var closestTarget = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            filter: (structure) => {
+                return (
+                    //  EXTENSION 或者是 SPAWN 或者是 能量低于700的TOWER
+                    (structure.structureType == STRUCTURE_EXTENSION || 
+                    structure.structureType == STRUCTURE_SPAWN ||
+                    (structure.structureType == STRUCTURE_TOWER && 
+                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 300)) && 
+                    //  必须有需要补充能量
+                    structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
                 }
             });
-            if(target && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') ) {
-                //  优先考虑非防御塔
-                
-                //  新增最近非防御塔目标
-                var closestTarget = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-                    filter: (structure) => {
-                        return (   structure.structureType == STRUCTURE_EXTENSION ||
-                            structure.structureType == STRUCTURE_SPAWN) &&
-                            structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-                            (structure.store.getCapacity < creep.store[RESOURCE_ENERGY] || structure.store.getFreeCapacity > [RESOURCE_ENERGY]);
-                            /** 新增过滤：
-                             *      空间本身就小于creep的容量的 || 
-                             *      剩余空间大于creep当前的容量的
-                            */
-                    }
-                });
-                
-                //  找到最近的非防御塔目标
-                if(closestTarget){
-                    if(Memory.debugMode){
-                        console.log(creep.name, "find target", closestTarget);
-                    }
-                    if(creep.transfer(closestTarget, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(closestTarget, {visualizePathStyle: {stroke: '#ffffff'}});
-                    }
+
+            //  充能
+            if(closestTarget && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') ) {
+                if(Memory.debugMode){
+                    console.log(creep.name, "find target", closestTarget);
                 }
-                //  如果其他的都满了则补充塔
-                else{
-                    if(Memory.debugMode){
-                        console.log(creep.name, '给防御塔充电');
-                    }
-                    if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
-                    }
+                if(creep.transfer(closestTarget, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(closestTarget, {visualizePathStyle: {stroke: '#ffffff'}});
                 }
+                return;
             }
-            else{
-                //  建筑
-                var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-                if(targets.length) {
-                    if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-                    }
+            //  建筑
+            var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+            if(targets.length) {
+                if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
                 }
-                //  维修
-                else{                
-                    var targets = creep.room.find(FIND_STRUCTURES, {
-                        filter: object => object.hits < object.hitsMax
-                    });
-                    
-                    targets.sort((a,b) => a.hits - b.hits);
-                    
-                    if(targets.length > 0) {
-                        if(creep.repair(targets[0]) == ERR_NOT_IN_RANGE) {
-                            creep.moveTo(targets[0]);
-                        }
-                    }
+                return;
+            }
+            //  维修             
+            var targets = creep.room.find(FIND_STRUCTURES, {
+                filter: object => {
+                    return (object.hitsMax - object.hits > 200 &&
+                        object.structureType != STRUCTURE_ROAD)
                 }
+            });
+            
+            targets.sort((a,b) => a.hits - b.hits);
+            
+            if(targets.length) {
+                if(creep.repair(targets[0]) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+                }
+                return;
             }
         }
         else {

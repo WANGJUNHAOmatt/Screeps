@@ -1,16 +1,12 @@
 const { filter } = require("lodash");
 
 var rolePorter = {
-    //  地上掉落的资源（暂未启用）
-    resource : [],
-
     targets :  {
         '0': {
             //  输入                      
             'in': [
                 '5edf60335c8fede4ed0b08e6', //  矿[0] 
                 '5edf550ebcf2e480efa2776d', //  矿[1]
-                '5edfff8c66081f4dcc883f93', //  GlobalPorter 暂存地
             ],
             //  输出
             'out': [
@@ -105,7 +101,8 @@ var rolePorter = {
          * 输入模式
          * 当前策略：
          *      寻找输出目标中能量最多的容器进行输入
-         *      (2020/06/09新增) 寻找资源（需要特判手动添加）
+         *      可以挖坟
+         *      可以自动寻找资源
          * 目标策略：
          *      可能需要权衡移动距离，
          *      并且考虑在多个输出creeps时，目标透支的情况
@@ -118,17 +115,25 @@ var rolePorter = {
                 }
             })
             if(tombstone.length){
-                console.log(creep.name, "find tombstone.");
-                if(creep.pickup(tombstone[0]) == ERR_NOT_IN_RANGE){
+                console.log(creep.name, "find tombstone.", tombstone[0]);
+                if(creep.withdraw(tombstone[0]) == ERR_NOT_IN_RANGE){
                     creep.say("挖坟去！");
+                    // console.log(creep.name, "find tombstone.", tombstone[0]);
                     creep.moveTo(tombstone[0], {visualizePathStyle: {stroke: '#ffffff'}});
                 }
+                return;
             }
             //  特判 -> 捡拾resource
-            if(this.resource.length){
-                if(creep.pickup(Game.getObjectById('5edf5ea15b130af755023ed3'), ) == ERR_NOT_IN_RANGE){
+            var resource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+                filter: (resource) =>  {
+                    return resource.amount > creep.store.getFreeCapacity(RESOURCE_ENERGY);
+                }
+            });
+            if(resource){
+                // console.log(creep.name, "find resource.", resource);
+                if(creep.pickup(resource) == ERR_NOT_IN_RANGE){
                     creep.say("resource⚡");
-                    creep.moveTo(Game.getObjectById('5edf5ea15b130af755023ed3'), {visualizePathStyle: {stroke: '#ffffff'}});
+                    creep.moveTo(resource, {visualizePathStyle: {stroke: '#ffffff'}});
                 }
             }
             else{
@@ -149,11 +154,19 @@ var rolePorter = {
                         }
                     }
                 }
+                //  input容器中不足时从 GlobalPorter中继container 取
+                if(Game.getObjectById(final_target).store[RESOURCE_ENERGY] < creep.store.getFreeCapacity(RESOURCE_ENERGY) && Game.getObjectById('5edfff8c66081f4dcc883f93').store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)){
+                    final_target = '5edfff8c66081f4dcc883f93';
+                    creep.say("中继点！");
+                    console.log(creep.name, '从中继点取出资源');
+                }
+                //  container 资源不足时从storage中提取
                 if(Game.getObjectById(final_target).store[RESOURCE_ENERGY] < creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.room.storage.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)){
                     final_target = creep.room.storage.id;
                     creep.say("取钱！");
                     console.log(creep.name, '输入资源不足');
                 }
+                
                 if(creep.withdraw(Game.getObjectById(final_target), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
                     creep.say("input⚡");
                     creep.moveTo(Game.getObjectById(final_target), {visualizePathStyle: {stroke: '#ffffff'},reusePath: 50});

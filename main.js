@@ -5,6 +5,7 @@ var rolePorter = require('role.porter');
 var roleExplorer = require('role.explorer');
 var roleGlobalHarvester = require('role.globalHarvester');
 var roleGlobalPorter = require('role.globalPorter');
+var roleGuard = require('role.guard');
 var stateScanner = require('stateScanner').stateScanner;
 
 Memory.debugMode = false;
@@ -65,6 +66,18 @@ var creeps_roles = {
         "cost" : 700,
     }, 
 
+    //  (2020/06/11新增)    外矿护卫
+    "guard" : {
+        "number" : 1,
+        "body" : [
+            ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
+            ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+        ],
+        "cost" : 1300,
+    },
+
     // TODO: 重构这段职业 -> 任务发布式
     //  待重构代码的upgrader
     "upgrader" : {
@@ -108,7 +121,7 @@ module.exports.loop = function () {
     if(testflag){
         testflag = false;
         
-        build('globalPorter', 'GlobalPorter03');
+        build('guard', 'Guard15');
     }
 
     // // 防御塔
@@ -145,22 +158,37 @@ module.exports.loop = function () {
         }
     }
     
-    //  简单的死亡控制
+    //  记录死亡Creeps数
+    var death = 0;
     for(name in Memory.creeps){
         // console.log("Doing respawn test:", name);
         if(!Game.creeps[name]){
-            console.log(name, " is died.");
+            death++;
+        }
+    }
+    console.log("当前共有", death, "只creep死亡 | R.I.P.");
+    
+    for(name in Memory.creeps){
+        // console.log("Doing respawn test:", name);
+        if(!Game.creeps[name]){
+            console.log(name, "等待复活");
             //  将想要删除的creep，等待老死并删除Memory
             var killCreepName = "";
             if(name != killCreepName)
             {
-                build(Memory.creeps[name].role, name);
+                if(Game.spawns.Base.room.energyAvailable < creeps_roles[Memory.creeps[name].role]["cost"]){
+                    console.log('生产能源不足！', Game.spawns.Base.room.energyAvailable, '/', creeps_roles[Memory.creeps[name].role]["cost"]);
+                    break;
+                }
+                if(!Game.spawns.Base.spawning){
+                    build(Memory.creeps[name].role, name);
+                    break;
+                }
             }
             else{
                 console.log(killCreepName, "is died, deleting memory.");
                 delete Memory.creeps[killCreepName];
             }
-            break;
         }
     }
     
@@ -189,12 +217,21 @@ module.exports.loop = function () {
         if(creep.memory.role == 'globalPorter'){
             roleGlobalPorter.run(creep);
         }
+        if(creep.memory.role == 'guard'){
+            roleGuard.run(creep);
+        }
     }
     //  数据收集
     stateScanner();
+    /**
+     * 全局统计信息扫描器
+     * 负责搜集关于 cpu、memory、GCL、GPL 的相关信息
+     */
+
+    //  记录Spawn的生产时间占比
+    Memory.stats.spawningTotalTime++;
+    if(Game.spawns.Base.spawning) Memory.stats.spawnSpawningTime++;
+    Memory.stats.deathCreepsNum = death;
 }
 
-/**
- * 全局统计信息扫描器
- * 负责搜集关于 cpu、memory、GCL、GPL 的相关信息
- */
+
