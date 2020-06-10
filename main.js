@@ -39,11 +39,11 @@ var creeps_roles = {
         "number": 1,
         "body" : [
                     CARRY, CARRY, CARRY, CARRY, CARRY, 
-                    CARRY, CARRY, CARRY,
+                    CARRY, CARRY, CARRY, CARRY, 
                     MOVE, MOVE, MOVE, MOVE, MOVE,
-                    MOVE, MOVE, MOVE,
+                    MOVE, MOVE, MOVE, MOVE,
                 ],
-        "cost" : 800,
+        "cost" : 900,
     },
 
     //  (2020/06/10新增)    外矿搬运工
@@ -71,11 +71,11 @@ var creeps_roles = {
         "number": 1,
         "body" : [
             WORK, WORK, WORK, WORK, WORK, 
-            WORK, 
-            CARRY, CARRY, 
-            MOVE, MOVE, MOVE
+            WORK, WORK, WORK, WORK, WORK,
+            CARRY, CARRY, CARRY, CARRY, 
+            MOVE, MOVE,
         ],
-        "cost" : 850,
+        "cost" : 1300,
     }, 
     //  待重构代码的builder
     "builder" : {
@@ -115,18 +115,33 @@ module.exports.loop = function () {
     var tower = Game.getObjectById('5edebfd94e312941cfb6f2fe');
     if(tower) {
         var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+        //  有敌人优先攻击敌人
         if(closestHostile) {
+            console.log('攻击敌人');
+            console.log(closestHostile);
             tower.attack(closestHostile);
         }
-
-        var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: (structure) => {
-                return (structure.hits + 200 < structure.hitsMax && 
-                        structure.structureType != STRUCTURE_WALL)
+        else{
+            var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return (structure.hits + 200 < structure.hitsMax && 
+                            structure.structureType != STRUCTURE_WALL)
+                }
+            });
+            if(closestDamagedStructure) {
+                tower.repair(closestDamagedStructure);
             }
-        });
-        if(closestDamagedStructure) {
-            tower.repair(closestDamagedStructure);
+            else{
+                //  新增：如果其他建筑都满血，就刷墙
+                closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return (structure.hits + 200 < structure.hitsMax)
+                    }
+                });
+                if(closestDamagedStructure) {
+                    tower.repair(closestDamagedStructure);
+                }
+            }
         }
     }
     
