@@ -71,11 +71,9 @@ var creeps_roles = {
         "number" : 1,
         "body" : [
             ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
-            ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
-            MOVE, MOVE, MOVE, MOVE, MOVE,
             MOVE, MOVE, MOVE, MOVE, MOVE,
         ],
-        "cost" : 1300,
+        "cost" : 650,
     },
 
     // TODO: 重构这段职业 -> 任务发布式
@@ -117,6 +115,7 @@ function build(_role, name){
 var testflag = false;
 
 module.exports.loop = function () {
+    // Memory.creeps['Guard00'].role = 'guard';
     //  测试代码区，每次保存执行一次
     if(testflag){
         testflag = false;

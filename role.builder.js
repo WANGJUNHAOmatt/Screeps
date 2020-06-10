@@ -45,7 +45,11 @@ var roleBuilder = {
             });
 
             //  充能
-            if(closestTarget && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') ) {
+
+            // 先前的判断条件
+            //  && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') 
+            
+            if(closestTarget) {
                 if(Memory.debugMode){
                     console.log(creep.name, "find target", closestTarget);
                 }
