@@ -18,8 +18,23 @@ var roleUpgrader = {
             }
         }
         else {
-            if(creep.withdraw(Game.getObjectById('5ede7d734039d213a6af584a'), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(Game.getObjectById('5ede7d734039d213a6af584a'), {visualizePathStyle: {stroke: '#ffaa00'}});
+            //  捡拾容器和Storage
+            var target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return ((structure.structureType == STRUCTURE_CONTAINER  ||
+                        structure.structureType == STRUCTURE_STORAGE) &&
+                        structure.store[RESOURCE_ENERGY] > creep.store.getFreeCapacity(RESOURCE_ENERGY))
+                }
+            });
+            if(target){
+                // console.log(creep.name, " find ", target);                
+                if(creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
+                }
+            }
+            else{
+                creep.say("No enough energy!");
+                // console.log(creep.store.getFreeCapacity(RESOURCE_ENERGY));
             }
         }
     }

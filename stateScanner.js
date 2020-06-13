@@ -19,10 +19,12 @@ module.exports.stateScanner = function () {
     Memory.stats.bucket = Game.cpu.bucket
 
     //  自己添加的
+    var room = Game.spawns.Base.room;
     //  储存的能量
-    Memory.stats.energy = Game.rooms['W16S19'].storage.store[RESOURCE_ENERGY];
+    Memory.stats.energy = room.storage.store[RESOURCE_ENERGY];
+    
     //  rcl等级和进度
-    Memory.stats.rclLevel = Game.rooms['W16S19'].controller.level;
-    Memory.stats.rclProgress = Game.rooms['W16S19'].controller.progress;
-    Memory.stats.rclProgressTotal = Game.rooms['W16S19'].controller.progressTotal;
+    Memory.stats.rclLevel = room.controller.level;
+    Memory.stats.rclProgress = room.controller.progress;
+    Memory.stats.rclProgressTotal = room.controller.progressTotal;
 }

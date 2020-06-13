@@ -1,3 +1,14 @@
+var roles = [
+    'harvester', 
+    'upgrader', 
+    'builder', 
+    'porter',
+    // 'explorer',
+    'globalHarvester',
+    'globalPorter',
+    'soldier',
+    'guard',
+];
 var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
@@ -5,10 +16,17 @@ var rolePorter = require('role.porter');
 var roleExplorer = require('role.explorer');
 var roleGlobalHarvester = require('role.globalHarvester');
 var roleGlobalPorter = require('role.globalPorter');
+var roleSoldier = require('role.soldier').roleSoldier;
 var roleGuard = require('role.guard');
 var stateScanner = require('stateScanner').stateScanner;
+var runTower = require('tower');
 
+//  调试模式，更详细的信息
 Memory.debugMode = false;
+
+
+var temp_roles = ['harvester', 'builder', 'upgrader', 'porter', 'globalHarvester', 'globalPorter', 'guard'];
+
 
 // creep的角色
 /*
@@ -40,7 +58,7 @@ var creeps_roles = {
         "number": 1,
         "body" : [
                     CARRY, CARRY, CARRY, CARRY, CARRY, 
-                    CARRY, CARRY, CARRY, CARRY, 
+                    CARRY, CARRY, CARRY, CARRY,
                     MOVE, MOVE, MOVE, MOVE, MOVE,
                     MOVE, MOVE, MOVE, MOVE,
                 ],
@@ -94,10 +112,22 @@ var creeps_roles = {
         "body" : [
             WORK, WORK, WORK, WORK, 
             CARRY, CARRY, 
-            MOVE, MOVE, MOVE
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+            MOVE,
         ],
-        "cost" : 650,
+        "cost" : 800,
     }, 
+
+    "soldier" : {
+        "number" : 1,
+        "body" : [
+            ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
+            ATTACK,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+            MOVE,
+        ],
+        "cost" : 780,
+    }
 }
 
 
@@ -119,48 +149,34 @@ module.exports.loop = function () {
     //  测试代码区，每次保存执行一次
     if(testflag){
         testflag = false;
-        
-        build('guard', 'Guard15');
+
+        build('globalPorter', 'GlobalPorter05');
     }
 
-    // // 防御塔
-    var tower = Game.getObjectById('5edebfd94e312941cfb6f2fe');
-    if(tower) {
-        var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-        //  有敌人优先攻击敌人
-        if(closestHostile) {
-            console.log('攻击敌人');
-            console.log(closestHostile);
-            tower.attack(closestHostile);
-        }
-        else{
-            var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-                filter: (structure) => {
-                    return (structure.hits + 200 < structure.hitsMax && 
-                            structure.structureType != STRUCTURE_WALL)
-                }
-            });
-            if(closestDamagedStructure) {
-                tower.repair(closestDamagedStructure);
-            }
-            else{
-                //  新增：如果其他建筑都满血，就刷墙
-                closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-                    filter: (structure) => {
-                        return (structure.hits + 200 < structure.hitsMax)
-                    }
-                });
-                if(closestDamagedStructure) {
-                    tower.repair(closestDamagedStructure);
-                }
-            }
+
+    // 自动SafeMode
+    if(Game.spawns.Base.hits < Game.spawns.Base.hitsMax){
+        var room = Game.rooms['E48S26'];
+        if((!room.controller.safeMode) && (!room.controller.safeModeCooldown) && room.controller.safeModeAvailable){
+            room.controller.activateSafeMode();
+            console.log('开启Safe Mode')
+            Memory.activateSafeMode++;
         }
     }
+
+    // 防御塔
+    runTower();
     
     //  记录死亡Creeps数
     var death = 0;
     for(name in Memory.creeps){
         // console.log("Doing respawn test:", name);
+
+        //  临时（暂时的角色）
+        if(!temp_roles.includes(Memory.creeps[name].role)){
+            continue;
+        }
+
         if(!Game.creeps[name]){
             death++;
         }
@@ -170,10 +186,16 @@ module.exports.loop = function () {
     for(name in Memory.creeps){
         // console.log("Doing respawn test:", name);
         if(!Game.creeps[name]){
+            
+            //  临时（暂时的角色）
+            if(!temp_roles.includes(Memory.creeps[name].role)){
+                continue;
+            }
+
             console.log(name, "等待复活");
             //  将想要删除的creep，等待老死并删除Memory
-            var killCreepName = "";
-            if(name != killCreepName)
+            var killCreepName = ['', ''];
+            if(!killCreepName.includes(name))
             {
                 if(Game.spawns.Base.room.energyAvailable < creeps_roles[Memory.creeps[name].role]["cost"]){
                     console.log('生产能源不足！', Game.spawns.Base.room.energyAvailable, '/', creeps_roles[Memory.creeps[name].role]["cost"]);
@@ -185,8 +207,8 @@ module.exports.loop = function () {
                 }
             }
             else{
-                console.log(killCreepName, "is died, deleting memory.");
-                delete Memory.creeps[killCreepName];
+                console.log(name, "is died, deleting memory.");
+                delete Memory.creeps[name];
             }
         }
     }
@@ -194,30 +216,15 @@ module.exports.loop = function () {
 
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
-
-        if(creep.memory.role == 'harvester') {
-            roleHarvester.run(creep);
+        if(roles.includes(creep.memory.role)){
+            var role = creep.memory.role
+            var roleFunctionName = "role" + role.slice(0, 1).toUpperCase() + role.slice(1) + ".run(creep);";
+            // console.log(roleFunctionName);
+            eval(roleFunctionName);
+            // console.log('各司其职', creep.name, role);
         }
-        if(creep.memory.role == 'upgrader') {
-            roleUpgrader.run(creep);
-        }
-        if(creep.memory.role == 'builder') {
-            roleBuilder.run(creep);
-        }
-        if(creep.memory.role == 'porter') {
-            rolePorter.run(creep);
-        }   
-        if(creep.memory.role == 'explorer'){
-            roleExplorer.run(creep);
-        }
-        if(creep.memory.role == 'globalHarvester'){
-            roleGlobalHarvester.run(creep);
-        }
-        if(creep.memory.role == 'globalPorter'){
-            roleGlobalPorter.run(creep);
-        }
-        if(creep.memory.role == 'guard'){
-            roleGuard.run(creep);
+        else{
+            console.error(creep.name, 'has no job');
         }
     }
     //  数据收集

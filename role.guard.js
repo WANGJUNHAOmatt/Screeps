@@ -2,28 +2,24 @@ var roleGuard = {
     targets : {
         //  守护点
         '0' : {
-            pos : new RoomPosition(33, 11, 'W17S21'),   // 矿点4,5
-            id : '5bbcabf49099fc012e6348e0',
+            pos : new RoomPosition(18, 38, 'E49S26'),
+            id : '5bbcaff99099fc012e63b720',
         },
         '1' : {
-            pos : new RoomPosition(13, 13, 'W15S19'),   //  矿点0,1
-            id : '5bbcac0f9099fc012e634d10',
+            pos : new RoomPosition(25, 25, 'E48S25'),
+            id : '5bbcafe59099fc012e63b59d',
         },
         '2' : {
-            pos : new RoomPosition(43, 33, 'W15S18'),   //  矿点2,3
-            id : '5bbcac0f9099fc012e634d0b',
+            pos : new RoomPosition(30, 28, 'E49S27'),
+            id : '5bbcaff99099fc012e63b724',
         },
         '3' : {
-            pos : new RoomPosition(45, 24, 'W15S18'),
-            id : '5bbcac0f9099fc012e634d0a',
+            pos : new RoomPosition(40, 18, 'E48S27'),
+            id : '5bbcafe69099fc012e63b5a4',
         },
         '4' : {
-            pos : new RoomPosition(38, 2, 'W17S21'),
-            id : '5bbcabf49099fc012e6348e0',
-        },
-        '5' : {
-            pos : new RoomPosition(44, 37, 'W17S21'),
-            id : '5bbcabf49099fc012e6348e2',
+            pos : new RoomPosition(10, 47, 'E47S25'),
+            id : '5bbcafd49099fc012e63b40f',
         },
     },
     /** @param {Creep} creep **/

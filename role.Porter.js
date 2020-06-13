@@ -5,28 +5,30 @@ var rolePorter = {
         '0': {
             //  输入                      
             'in': [
-                '5edf60335c8fede4ed0b08e6', //  矿[0] 
-                '5edf550ebcf2e480efa2776d', //  矿[1]
+                '5ee2d581058adc2c17be7f53', //  矿[0]
+                '5ee2e08e0bf2e3bfd29d5429', //  矿[1]
             ],
             //  输出
             'out': [
-                // '5ede3f1bba71206ff44405b8',     //  原中心容器
-                '5ede9186424225bfa8e29658',     //  炮塔旁的容器
-                '5edf82474d2ceba4e20dd55a',     //  Storage
-                '5ede7d734039d213a6af584a',     //  升级RCL的容器
+                '5ee2fa1ac7219348de6da24d', //  中央容器
+                '5ee30decbf18d50abd52620a', //  Upgrader容器
+                '5ee3908572690e436e4c8dc7', //  Tower
+                '5ee4aaf11361dae620c24f3b', //  storage
             ],
         },
         //  '1' 为了节约，已经弃用
         '1':{
             //  输入     
             'in': [
-                '5edf550ebcf2e480efa2776d',     //  矿[1]
-                '5ede9186424225bfa8e29658',     //  炮塔旁的容器
-                '5edf82474d2ceba4e20dd55a',     //  Storage
+                '5ee2d581058adc2c17be7f53', //  矿[0]
+                '5ee2e08e0bf2e3bfd29d5429', //  矿[1]
             ],
             //  输出
             'out': [
-                '5ede7d734039d213a6af584a',     //  升级RCL的容器
+                '5ee2fa1ac7219348de6da24d', //  中央容器
+                '5ee30decbf18d50abd52620a', //  Upgrader容器
+                '5ee4aaf11361dae620c24f3b', //  storage
+                '5ee3908572690e436e4c8dc7', //  Tower
             ],
         }
     },
@@ -68,6 +70,15 @@ var rolePorter = {
          */
         if(creep.memory.transsferring) {
             var final_target = null, minimal_energy = 99999999;
+
+            //  添加Porter给Spawn补充(当builder00死亡的时候)
+            if(Game.spawns.Base.store[RESOURCE_ENERGY] < 300 && !Game.creeps['0_Builder00']){
+                if(Memory.debugMode){
+                    console.log(creep.name, 'fuel Base');
+                }
+                final_target = Game.spawns.Base.id;
+            }
+
             for(var target in this.targets[id]['out']){
                 //  更新当前存储量最小的容器
                 if(!Game.getObjectById(this.targets[id]['out'][target])){
@@ -111,7 +122,7 @@ var rolePorter = {
         else {
             var tombstone = creep.room.find(FIND_TOMBSTONES, {
                 filter: (tombstone) => {
-                    return tombstone.store[RESOURCE_ENERGY];
+                    return tombstone.store[RESOURCES_ALL] > creep.store.getFreeCapacity(RESOURCES_ALL);
                 }
             })
             if(tombstone.length){
@@ -154,12 +165,7 @@ var rolePorter = {
                         }
                     }
                 }
-                //  input容器中不足时从 GlobalPorter中继container 取
-                if(Game.getObjectById(final_target).store[RESOURCE_ENERGY] < creep.store.getFreeCapacity(RESOURCE_ENERGY) && Game.getObjectById('5edfff8c66081f4dcc883f93').store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)){
-                    final_target = '5edfff8c66081f4dcc883f93';
-                    creep.say("中继点！");
-                    console.log(creep.name, '从中继点取出资源');
-                }
+                
                 //  container 资源不足时从storage中提取
                 if(Game.getObjectById(final_target).store[RESOURCE_ENERGY] < creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.room.storage.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)){
                     final_target = creep.room.storage.id;

@@ -23,13 +23,6 @@ var roleBuilder = {
         }
 
         if(creep.memory.building) {
-            /**
-             * 维护（补充能量） | 按照id进行分工
-             * 当builder00，和builder01都在场时 -> builder00 负责
-             * 当builder01 或 builder00 死亡时，另一个人负责
-             * (?)当两个工人都死亡时 -> 没人管了就...
-             */
-
             //  新增最近需要补充能量的目标
             var closestTarget = creep.pos.findClosestByPath(FIND_STRUCTURES, {
             filter: (structure) => {
@@ -43,15 +36,32 @@ var roleBuilder = {
                     structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
                 }
             });
-
+            //  找到需要补充能量的所有目标
+            var targets = creep.room.find(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return (
+                        //  EXTENSION 或者是 SPAWN 或者是 能量低于700的TOWER
+                        (structure.structureType == STRUCTURE_EXTENSION || 
+                        structure.structureType == STRUCTURE_SPAWN ||
+                        (structure.structureType == STRUCTURE_TOWER && 
+                            structure.store.getFreeCapacity(RESOURCE_ENERGY) > 300)) && 
+                        //  必须有需要补充能量
+                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+                    }
+                });
+            if(Memory.debugMode){
+                console.log(creep.name, '的目标数量为:', targets.length);
+            }
             //  充能
 
             // 先前的判断条件
             //  && (id == '0' && !Game.creeps['Builder01'])||( id == '1' && !Game.creeps['Builder00']) || ((Game.creeps['Builder00'] && Game.creeps['Builder01']) && id == '0') 
-            
-            if(closestTarget) {
+
+            //  新增判断条件，两个人都活着，且总目标大于等于15，id为'1'的不进行维护
+            if(closestTarget && (id == '0' ||( id == '1' && !Game.creeps['Builder00']) || (id == '1' && (Game.creeps['Builder00'] && Game.creeps['Builder01']) && targets.length >= 15))) {
+                
                 if(Memory.debugMode){
-                    console.log(creep.name, "find target", closestTarget);
+                    console.log(creep.name, "充能", closestTarget);
                 }
                 if(creep.transfer(closestTarget, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(closestTarget, {visualizePathStyle: {stroke: '#ffffff'}});
@@ -59,26 +69,30 @@ var roleBuilder = {
                 return;
             }
             //  建筑
-            var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-            if(targets.length) {
-                if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+            var target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+            if(target) {
+                if(Memory.debugMode){
+                    console.log(creep.name, "建筑", target);
+                }
+                if(creep.build(target) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
                 }
                 return;
             }
             //  维修             
-            var targets = creep.room.find(FIND_STRUCTURES, {
+            var target = creep.pos.findClosestByPath(FIND_STRUCTURES, {
                 filter: object => {
                     return (object.hitsMax - object.hits > 200 &&
-                        object.structureType != STRUCTURE_ROAD)
+                        object.structureType != STRUCTURE_WALL)
                 }
             });
             
-            targets.sort((a,b) => a.hits - b.hits);
-            
-            if(targets.length) {
-                if(creep.repair(targets[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+            if(target) {
+                if(Memory.debugMode){
+                    console.log(creep.name, "维修", target);
+                }
+                if(creep.repair(target) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
                 }
                 return;
             }
