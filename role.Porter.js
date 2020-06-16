@@ -7,11 +7,11 @@ var rolePorter = {
             'in': [
                 '5ee2d581058adc2c17be7f53', //  矿[0]
                 '5ee2e08e0bf2e3bfd29d5429', //  矿[1]
+                '5ee5e04fd46b92552cbabb54', //  中央Link
             ],
             //  输出
             'out': [
                 '5ee2fa1ac7219348de6da24d', //  中央容器
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
                 '5ee3908572690e436e4c8dc7', //  Tower
                 '5ee4aaf11361dae620c24f3b', //  storage
             ],
@@ -22,11 +22,11 @@ var rolePorter = {
             'in': [
                 '5ee2d581058adc2c17be7f53', //  矿[0]
                 '5ee2e08e0bf2e3bfd29d5429', //  矿[1]
+                '5ee5e04fd46b92552cbabb54', //  中央Link
             ],
             //  输出
             'out': [
                 '5ee2fa1ac7219348de6da24d', //  中央容器
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
                 '5ee4aaf11361dae620c24f3b', //  storage
                 '5ee3908572690e436e4c8dc7', //  Tower
             ],
@@ -111,7 +111,7 @@ var rolePorter = {
         /**
          * 输入模式
          * 当前策略：
-         *      寻找输出目标中能量最多的容器进行输入
+         *      寻找输出目标中剩余空间最小的容器进行输入(2020/06/16)
          *      可以挖坟
          *      可以自动寻找资源
          * 目标策略：
@@ -148,26 +148,28 @@ var rolePorter = {
                 }
             }
             else{
-                var final_target = null, maximal_energy = 0;
+                var final_target = null, minimal_energy = 99999999;
                 //  捡拾 container
                 if(Memory.debugMode){
                     console.log(creep.name, "is inputing.");
                 }
                 for(var target in this.targets[id]['in']){
-                    //  更新当前存储量最大的容器
+                    //  更新当前剩余空间最小的容器
                     if(!Game.getObjectById(this.targets[id]['in'][target])){
                         console.log(creep.name, "can't find input target!", this.targets[id]['in'][target]);
                     }
                     else{
-                        if(Game.getObjectById(this.targets[id]['in'][target]).store[RESOURCE_ENERGY] > maximal_energy){
-                            maximal_energy = Game.getObjectById(this.targets[id]['in'][target]).store[RESOURCE_ENERGY];
+                        if(Game.getObjectById(this.targets[id]['in'][target]).store.getFreeCapacity(RESOURCE_ENERGY) < minimal_energy){
+                            minimal_energy = Game.getObjectById(this.targets[id]['in'][target]).store.getFreeCapacity(RESOURCE_ENERGY);
                             final_target = this.targets[id]['in'][target];
+                            // console.log('更新目标为', Game.getObjectById(final_target));
                         }
                     }
                 }
-                
+                // console.log(creep.name, 'final_target', Game.getObjectById(final_target));
+
                 //  container 资源不足时从storage中提取
-                if(Game.getObjectById(final_target).store[RESOURCE_ENERGY] < creep.store.getFreeCapacity(RESOURCE_ENERGY) && creep.room.storage.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)){
+                if(Game.getObjectById(final_target).store[RESOURCE_ENERGY] == 0 && creep.room.storage.store[RESOURCE_ENERGY] >= creep.store.getFreeCapacity(RESOURCE_ENERGY)){
                     final_target = creep.room.storage.id;
                     creep.say("取钱！");
                     console.log(creep.name, '输入资源不足');

@@ -1,11 +1,11 @@
-var roleGuard = {
+var roleReserver = {
     targets : {
         //  守护点
         '0' : {
-            pos : new RoomPosition(15, 33, 'E49S26'),
+            pos : new RoomPosition(18, 38, 'E49S26'),
         },
         '1' : {
-            pos : new RoomPosition(36, 31, 'E48S25'),
+            pos : new RoomPosition(25, 25, 'E48S25'),
         },
         '2' : {
             pos : new RoomPosition(30, 28, 'E49S27'),
@@ -36,28 +36,13 @@ var roleGuard = {
         } 
         //  在同一个房间
         else{
-            //  有敌人
-            var enemy = creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS);
-            if(enemy){
-                console.log(creep.name, 'find enemy', enemy);
-                if(creep.attack(enemy) == ERR_NOT_IN_RANGE){
-                    creep.say("Fight!!!");
-                    creep.moveTo(enemy);
-                }
-            }
-            //  无敌人，就在附近保护
-            else{
-                if(creep.pos.isEqualTo(this.targets[id].pos)){
-                    creep.say("就位!");
-                }
-                else{
-                    creep.say('前往保护！');
-                    creep.moveTo(this.targets[id].pos);
-                }
+            creep.say("Reserve!");
+            if(creep.reserveController(creep.room.controller) == ERR_NOT_IN_RANGE){
+                creep.moveTo(creep.room.controller);
             }
         }
     }
 }
 
 
-module.exports = roleGuard;
+module.exports = roleReserver;

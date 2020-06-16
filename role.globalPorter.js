@@ -4,9 +4,9 @@ var roleGlobalPorter = {
             pos : new RoomPosition( 19, 37, 'E49S26'),
             id : '5bbcaff99099fc012e63b720',
             'out': [
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
-                '5ee2fa1ac7219348de6da24d', //  中央容器
                 '5ee4aaf11361dae620c24f3b', //  storage
+                '5ee30decbf18d50abd52620a', //  Upgrader容器
+                '5ee5f6724130e7cb792e7f9e', //  Link
             ],
         },
         '1' : {
@@ -14,7 +14,6 @@ var roleGlobalPorter = {
             id : '5bbcafe59099fc012e63b59d',
             'out': [
                 '5ee2fa1ac7219348de6da24d', //  中央容器
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
                 '5ee4aaf11361dae620c24f3b', //  storage
             ],
         },
@@ -23,7 +22,6 @@ var roleGlobalPorter = {
             id : '5bbcafe59099fc012e63b59b',
             'out': [
                 '5ee2fa1ac7219348de6da24d', //  中央容器
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
                 '5ee4aaf11361dae620c24f3b', //  storage
             ],
         },
@@ -31,18 +29,18 @@ var roleGlobalPorter = {
             pos : new RoomPosition(24, 35, 'E49S27'),
             id : '5bbcaff99099fc012e63b724',
             'out': [
-                '5ee2fa1ac7219348de6da24d', //  中央容器
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
                 '5ee4aaf11361dae620c24f3b', //  storage
+                '5ee30decbf18d50abd52620a', //  Upgrader容器
+                '5ee5f6724130e7cb792e7f9e', //  Link
             ],
         },
         '4' : {
             pos : new RoomPosition(38, 9, 'E48S27'),
             id : '5bbcafe69099fc012e63b5a4',
             'out': [
-                '5ee2fa1ac7219348de6da24d', //  中央容器
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
                 '5ee4aaf11361dae620c24f3b', //  storage
+                '5ee30decbf18d50abd52620a', //  Upgrader容器
+                '5ee5f6724130e7cb792e7f9e', //  Link
             ],
         },
         '5' : {
@@ -50,7 +48,38 @@ var roleGlobalPorter = {
             id : '5bbcafd49099fc012e63b40f',
             'out': [
                 '5ee2fa1ac7219348de6da24d', //  中央容器
-                '5ee30decbf18d50abd52620a', //  Upgrader容器
+                '5ee4aaf11361dae620c24f3b', //  storage
+            ],
+        },
+        '6' : {
+            pos : new RoomPosition(30, 40, 'E47S24'),
+            id : '5bbcafd49099fc012e63b40c',
+            'out': [
+                '5ee2fa1ac7219348de6da24d', //  中央容器
+                '5ee4aaf11361dae620c24f3b', //  storage
+            ],
+        },
+        '7' : {
+            pos : new RoomPosition(12, 28, 'E47S24'),
+            id : '5bbcafd49099fc012e63b40b',
+            'out': [
+                '5ee2fa1ac7219348de6da24d', //  中央容器
+                '5ee4aaf11361dae620c24f3b', //  storage
+            ],
+        },
+        '8' : {
+            pos : new RoomPosition(36, 30, 'E47S25'),
+            id : '5bbcaff99099fc012e63b71e',
+            'out': [
+                '5ee2fa1ac7219348de6da24d', //  中央容器
+                '5ee4aaf11361dae620c24f3b', //  storage
+            ],
+        },
+        '9' : {
+            pos : new RoomPosition(33, 18, 'E49S25'),
+            id : '5bbcaff99099fc012e63b71c',
+            'out': [
+                '5ee2fa1ac7219348de6da24d', //  中央容器
                 '5ee4aaf11361dae620c24f3b', //  storage
             ],
         },
@@ -113,7 +142,7 @@ var roleGlobalPorter = {
                 if(Memory.debugMode){
                     console.log(creep.name, "go to", Game.getObjectById(final_target));
                 }
-                creep.moveTo(Game.getObjectById(final_target), {visualizePathStyle: {stroke: '#ffffff'},reusePath: 50});
+                creep.moveTo(Game.getObjectById(final_target), {visualizePathStyle: {stroke: '#ffffff'}});
             }
         }
         else{
@@ -131,10 +160,25 @@ var roleGlobalPorter = {
                 })
                 if(tombstone.length){
                     console.log(creep.name, "find tombstone.", tombstone[0]);
-                    if(creep.withdraw(tombstone[0]) == ERR_NOT_IN_RANGE){
+                    if(creep.withdraw(tombstone[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
                         creep.say("挖坟去！");
                         // console.log(creep.name, "find tombstone.", tombstone[0]);
                         creep.moveTo(tombstone[0], {visualizePathStyle: {stroke: '#ffffff'}});
+                    }
+                    return;
+                }
+
+                var ruin = creep.room.find(FIND_RUINS, {
+                    filter: (ruin) => {
+                        return ruin.store[RESOURCE_ENERGY];
+                    }
+                })
+                ruin.sort((a, b) => (a.store[RESOURCE_ENERGY] - b.store[RESOURCE_ENERGY]));
+                if(ruin.length){
+                    console.log(creep.name, "find ruin.", ruin[0]);
+                    if(creep.withdraw(ruin[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+                        creep.say("捡破烂！");
+                        creep.moveTo(ruin[0], {visualizePathStyle: {stroke: '#ffffff'}});
                     }
                     return;
                 }

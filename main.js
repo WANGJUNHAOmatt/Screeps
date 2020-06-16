@@ -3,12 +3,18 @@ var roles = [
     'upgrader', 
     'builder', 
     'porter',
-    // 'explorer',
+    'explorer',
     'globalHarvester',
     'globalPorter',
     'soldier',
     'guard',
+    'tank',
+    'nurse',
+    'reserver',
 ];
+
+var temp_roles = ['harvester', 'builder', 'upgrader', 'porter', 'globalHarvester', 'globalPorter', 'guard', 'reserver'];
+
 var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
@@ -18,14 +24,28 @@ var roleGlobalHarvester = require('role.globalHarvester');
 var roleGlobalPorter = require('role.globalPorter');
 var roleSoldier = require('role.soldier').roleSoldier;
 var roleGuard = require('role.guard');
+var roleTank = require('role.tank');
+var roleNurse = require('role.nurse');
+var roleReserver = require('role.reserver');
 var stateScanner = require('stateScanner').stateScanner;
 var runTower = require('tower');
 
 //  调试模式，更详细的信息
 Memory.debugMode = false;
 
+function refresh() {
+    Memory.stats.spawningTime = [];
+    Memory.stats.spawningTotalTime = 0;
+    Memory.stats.spawnSpawningTime = 0;
+}
 
-var temp_roles = ['harvester', 'builder', 'upgrader', 'porter', 'globalHarvester', 'globalPorter', 'guard'];
+
+
+//  通过Memory新增角色
+Memory.creeps['GlobalHarvester08'] = {
+    role : "globalHarvester"
+};
+
 
 
 // creep的角色
@@ -47,10 +67,10 @@ var creeps_roles = {
     "globalHarvester" : {
         "number" : 2,
         "body" : [
-            WORK, WORK, WORK, 
+            WORK, WORK, WORK, WORK, WORK,
             MOVE, MOVE, MOVE,
         ],
-        "cost": 450,
+        "cost": 650,
     },
 
     //  搬运能源，CARRY，MOVE为主
@@ -60,9 +80,8 @@ var creeps_roles = {
                     CARRY, CARRY, CARRY, CARRY, CARRY, 
                     CARRY, CARRY, CARRY, CARRY,
                     MOVE, MOVE, MOVE, MOVE, MOVE,
-                    MOVE, MOVE, MOVE, MOVE,
                 ],
-        "cost" : 900,
+        "cost" : 700,
     },
 
     //  (2020/06/10新增)    外矿搬运工
@@ -121,12 +140,45 @@ var creeps_roles = {
     "soldier" : {
         "number" : 1,
         "body" : [
-            ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
-            ATTACK,
+            RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+            HEAL, HEAL, HEAL, 
+            TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
             MOVE, MOVE, MOVE, MOVE, MOVE,
             MOVE,
         ],
-        "cost" : 780,
+        "cost" : 1800,
+    },
+
+    "tank" : {
+        "number" : 1,
+        "body" : [
+            TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
+            TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
+            TOUGH, TOUGH, TOUGH, TOUGH, TOUGH,
+            ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+        ],
+        "cost" : 1100,
+    },
+
+    "nurse" : {
+        "number" : 1,
+        "body" : [
+            HEAL, HEAL, HEAL, HEAL,
+            MOVE, MOVE, MOVE, MOVE,
+        ],
+        "cost" : 1200,
+    },
+
+    "reserver" : {
+        'number' : 5,
+        "body" : [
+            CLAIM, CLAIM,
+            MOVE, MOVE,
+        ],
+        'cost' : 1300,
     }
 }
 
@@ -150,13 +202,17 @@ module.exports.loop = function () {
     if(testflag){
         testflag = false;
 
-        build('globalPorter', 'GlobalPorter05');
+        build('nurse', 'Nurse01');
     }
-
 
     // 自动SafeMode
     if(Game.spawns.Base.hits < Game.spawns.Base.hitsMax){
         var room = Game.rooms['E48S26'];
+        // if((!room.controller.safeMode) && (room.find(FIND_HOSTILE_CREEPS)).length){
+        //     room.controller.activateSafeMode();
+        //     console.log('开启Safe Mode')
+        //     Memory.activateSafeMode++;
+        // }
         if((!room.controller.safeMode) && (!room.controller.safeModeCooldown) && room.controller.safeModeAvailable){
             room.controller.activateSafeMode();
             console.log('开启Safe Mode')
@@ -166,6 +222,14 @@ module.exports.loop = function () {
 
     // 防御塔
     runTower();
+
+    // Link
+    var link_in = Game.getObjectById('5ee5f6724130e7cb792e7f9e');
+    var link_centre = Game.getObjectById('5ee5e04fd46b92552cbabb54');
+    if(link_in.store[RESOURCE_ENERGY] >= 600){
+        console.log('link transfer Energy :', (link_in.store[RESOURCE_ENERGY] - 500));
+        link_in.transferEnergy(link_centre, (link_in.store[RESOURCE_ENERGY] - 500));
+    }
     
     //  记录死亡Creeps数
     var death = 0;
@@ -194,7 +258,7 @@ module.exports.loop = function () {
 
             console.log(name, "等待复活");
             //  将想要删除的creep，等待老死并删除Memory
-            var killCreepName = ['', ''];
+            var killCreepName = [];
             if(!killCreepName.includes(name))
             {
                 if(Game.spawns.Base.room.energyAvailable < creeps_roles[Memory.creeps[name].role]["cost"]){
@@ -224,7 +288,7 @@ module.exports.loop = function () {
             // console.log('各司其职', creep.name, role);
         }
         else{
-            console.error(creep.name, 'has no job');
+            console.log('ERROR', creep.name, 'has no job');
         }
     }
     //  数据收集
@@ -235,8 +299,21 @@ module.exports.loop = function () {
      */
 
     //  记录Spawn的生产时间占比
-    Memory.stats.spawningTotalTime++;
-    if(Game.spawns.Base.spawning) Memory.stats.spawnSpawningTime++;
+    //  刷新数据
+    // refresh();
+    Memory.stats.spawningTotalTime = Memory.stats.spawningTime.length;
+    if(Game.spawns.Base.spawning){
+        Memory.stats.spawningTime.push(1);
+        Memory.stats.spawnSpawningTime++;
+    }
+    else{
+        Memory.stats.spawningTime.push(0);
+    }
+    if(Memory.stats.spawningTime.length > 1000){
+        Memory.stats.spawnSpawningTime -= Memory.stats.spawningTime[0];
+        Memory.stats.spawningTime.shift();
+    }
+    //  记录死亡Creeps数量
     Memory.stats.deathCreepsNum = death;
 }
 
